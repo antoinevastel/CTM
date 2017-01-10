@@ -1,0 +1,63 @@
+{
+  "tasks_to_run": [
+    {
+      "class": "DnsResolverTask",
+      "id": "dnsGoogle",
+      "target_url": "www.google.com",
+      "frequency": 1
+    },
+    {
+      "class": "PingTask",
+      "id": "pingGoogle",
+      "target_url": "www.google.com",
+      "nb_packets": 5,
+      "frequency": 1,
+      "save_output": true
+    },
+    {
+      "class": "TracerouteTask",
+      "id": "tracerouteGoogle",
+      "target_url": "www.google.com",
+      "frequency": 1,
+      "save_output": true
+    },
+    {
+      "class": "PingTask",
+      "id": "testDefId2",
+      "target_url": "www.youtube.com",
+      "save_output": true
+    },
+    {
+      "class": "PingTask",
+      "id": "testDefId1",
+      "target_url": "www.github.com",
+      "run_with": ["testDefId2"],
+      "save_output": true
+    },
+    {
+      "class": "TcpSpeedTestTask",
+      "id": "TCPSpeedTest",
+      "frequency": 60,
+      "run_with": ["pingGoogle", "tracerouteGoogle",
+        {
+          "class": "PingTask",
+          "id": "testDefId3",
+          "target_url": "www.lemonde.fr",
+          "save_output": true
+        },
+        "testDefId1"
+      ],
+      "save_output": true
+    }
+  ],
+  "context": {
+    "class": "ContextTask",
+    "id": "context",
+    "save_output": true
+  },
+  "save_all_outputs": true,
+  "save_task": {
+    "class": "SaveAPIRaspberryTask",
+    "id": "raspAPi"
+  }
+}
