@@ -135,7 +135,6 @@ class ScenarioManager:
     """
         If a task has no frequency we consider it is only a definition of the task
     """
-
     @staticmethod
     def is_task_definition(json_def):
         try:
