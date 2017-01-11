@@ -91,7 +91,6 @@ class MyTestCase(unittest.TestCase):
             list_tasks_id.sort()
             self.assertEqual(tasks_sequence.frequency, sequence_to_frequency[tuple(list_tasks_id)])
 
-    # todo tester si save task est correctement assignee
     def test_save_task(self):
         scenario_manager = ScenarioManager("tests", path + "/scenario_test1.json")
         scenario_manager.read_scenario()
