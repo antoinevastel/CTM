@@ -1,4 +1,6 @@
 import json
+import time
+
 import netifaces
 
 from scheduler.task import Task
@@ -23,6 +25,7 @@ class ContextTask(Task):
 
         key_value_to_export = dict()
         key_value_to_export[Task.TAG_KEY] = ContextTask.TAG
+        key_value_to_export["time"] = time.time()
         key_value_to_export["network_interface"] = def_gw_device
         key_value_to_export["mac_address"] = mac_addr
         key_value_to_export["wifi"] = is_wifi
