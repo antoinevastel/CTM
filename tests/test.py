@@ -1,15 +1,18 @@
 import unittest
+import os
 
 from scheduler import ScenarioManager
 from scheduler import TaskSequence
 
+path = os.path.dirname(__file__)
+print(path)
 
 class MyTestCase(unittest.TestCase):
     """
         Test if the task sequences generated are correct
     """
     def test_task_sequences(self):
-        scenario_manager = ScenarioManager("tests", "./scenario_test1.json")
+        scenario_manager = ScenarioManager("tests", path+"/scenario_test1.json")
         scenario_manager.read_scenario()
 
         expected_sequences = [{"testTask1"}, {"testTask2"}, {"testTask3", "testTask1", "testTask2", "testTask4"},
@@ -19,12 +22,12 @@ class MyTestCase(unittest.TestCase):
             self.assertSetEqual(scenario_manager.task_sequences_to_run[i].tasks_ids, expected_sequences[i])
 
     def test_undeclared_id(self):
-        scenario_manager = ScenarioManager("tests", "./scenario_test2.json")
+        scenario_manager = ScenarioManager("tests", path+"/scenario_test2.json")
         with self.assertRaises(ValueError):
             scenario_manager.read_scenario()
 
     def test_is_task_definition(self):
-        scenario_manager = ScenarioManager("tests", "./scenario_test1.json")
+        scenario_manager = ScenarioManager("tests", path + "/scenario_test1.json")
         scenario_manager.read_scenario()
 
         task1_json_definition = scenario_manager.id_to_task_definition["testTask1"]
@@ -39,7 +42,7 @@ class MyTestCase(unittest.TestCase):
         Assert that a context has been correctly assigned to all the tasks sequences
     """
     def test_context(self):
-        scenario_manager = ScenarioManager("tests", "./scenario_test1.json")
+        scenario_manager = ScenarioManager("tests", path + "/scenario_test1.json")
         scenario_manager.read_scenario()
 
         for tasks_sequence in scenario_manager.task_sequences_to_run:
@@ -49,7 +52,7 @@ class MyTestCase(unittest.TestCase):
         Assert that save_all attributes is correctly propagated
     """
     def test_save_all(self):
-        scenario_manager = ScenarioManager("tests", "./scenario_test1.json")
+        scenario_manager = ScenarioManager("tests", path + "/scenario_test1.json")
         scenario_manager.read_scenario()
         tasks_not_to_save = {"testTask2", "testTask4"}
 
@@ -74,7 +77,7 @@ class MyTestCase(unittest.TestCase):
         the higher level task as defined in the scenario file
     """
     def test_frequencies(self):
-        scenario_manager = ScenarioManager("tests", "./scenario_test1.json")
+        scenario_manager = ScenarioManager("tests", path + "/scenario_test1.json")
         scenario_manager.read_scenario()
 
         sequence_to_frequency = dict()
@@ -90,7 +93,7 @@ class MyTestCase(unittest.TestCase):
 
     # todo tester si save task est correctement assignee
     def test_save_task(self):
-        scenario_manager = ScenarioManager("tests", "./scenario_test1.json")
+        scenario_manager = ScenarioManager("tests", path + "/scenario_test1.json")
         scenario_manager.read_scenario()
         self.assertEqual(scenario_manager.save_output_task_id, "testSaveTask")
 
