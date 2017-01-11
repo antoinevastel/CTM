@@ -1,6 +1,6 @@
 import json
 import time
-import sys
+import logging
 
 from scheduler.taskSequence import TaskSequence
 from scheduler.task import Task
@@ -135,7 +135,6 @@ class ScenarioManager:
     """
         If a task has no frequency we consider it is only a definition of the task
     """
-
     @staticmethod
     def is_task_definition(json_def):
         try:
@@ -163,7 +162,7 @@ class ScenarioManager:
                     # TODO: maybe cases where there would be nothing to save in the sequence
                     data = sequence.execute()
                     save_output_instance.save(data)
-                    print("Ran sequence: {sequence}".format(sequence=str(sequence)), file=sys.stderr)
+                    logging.info("Ran sequence: {sequence}".format(sequence=str(sequence)))
                 time.sleep(self.scheduler_frequency)
         finally:
             save_output_instance.close()
