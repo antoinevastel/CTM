@@ -5,6 +5,8 @@ import logging
 from scheduler.taskSequence import TaskSequence
 from scheduler.task import Task
 
+# TODO: maybe give the possibility to link different contexts to different tasks
+
 
 class ScenarioManager:
     TASK_ID = "id"
