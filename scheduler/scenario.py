@@ -147,22 +147,28 @@ class ScenarioManager:
         return [sequence for sequence in self.task_sequences_to_run if sequence.must_trigger()]
 
     def instanciate_save_task(self):
-        save_output_class_name = self.id_to_task_definition[self.save_output_task_id][TaskSequence.TASK_CLASS]
+        if self.save_output_task_id is not None:
+            save_output_class_name = self.id_to_task_definition[self.save_output_task_id][TaskSequence.TASK_CLASS]
 
-        module = TaskSequence.import_task_class(save_output_class_name, self.tasks_classes_module)
-        save_output_class = getattr(module, save_output_class_name)
-        return save_output_class(self.id_to_task_definition[self.save_output_task_id])
+            module = TaskSequence.import_task_class(save_output_class_name, self.tasks_classes_module)
+            save_output_class = getattr(module, save_output_class_name)
+            return save_output_class(self.id_to_task_definition[self.save_output_task_id])
+        else:
+            return None
 
     def run_scenario(self):
         save_output_instance = self.instanciate_save_task()
+
         try:
             while True:
                 sequences_to_trigger = self.get_tasks_to_trigger()
                 for sequence in sequences_to_trigger:
                     # TODO: maybe cases where there would be nothing to save in the sequence
                     data = sequence.execute()
-                    save_output_instance.save(data)
+                    if save_output_instance is not None:
+                        save_output_instance.save(data)
                     logging.info("Ran sequence: {sequence}".format(sequence=str(sequence)))
                 time.sleep(self.scheduler_frequency)
         finally:
-            save_output_instance.close()
+            if save_output_instance is not None:
+                save_output_instance.close()
