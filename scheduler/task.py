@@ -7,7 +7,8 @@ class Task:
         try:
             self.save_output = json_definition[Task.SAVE_OUTPUT]
         except KeyError:
-            self.save_output = True
+            # By default if no save output policy is specified we don't save it
+            self.save_output = False
 
         self.id = json_definition[Task.ID]
 
