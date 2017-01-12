@@ -1,0 +1,43 @@
+{
+  "tasks_to_run": [
+    {
+      "class": "TestTask",
+      "id": "testTask1",
+      "frequency": 1
+    },
+    {
+      "class": "TestTask",
+      "id": "testTask2",
+      "frequency": 3,
+      "save_output": false
+    },
+    {
+      "class": "TestTask",
+      "id": "testTask4",
+      "run_with": ["testTask1"],
+      "save_output": false
+    },
+    {
+      "class": "TestTask",
+      "id": "testTask3",
+      "frequency": 2,
+      "run_with": ["testTask2", "testTask4"]
+    },
+    {
+      "class": "TestTask",
+      "id": "testTask5",
+      "run_with": [
+        {
+          "class": "TestTask",
+          "id": "testTask6"
+        }
+      ],
+      "frequency": 12
+    }
+  ],
+  "context": {
+    "class": "TestContextTask",
+    "id": "testContext"
+  },
+  "save_all_outputs": true
+}

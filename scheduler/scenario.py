@@ -18,6 +18,7 @@ class ScenarioManager:
     TASKS_CLASSES_DIR = "tasks_classes_dir"
 
     SCHEDULER_DEFAULT_FREQUENCY = 5
+    SCHEDULER_INF_DURATION = 9999
 
     def __init__(self, tasks_classes_module, scenario_file_path):
         self.tasks_classes_module = tasks_classes_module
@@ -39,6 +40,9 @@ class ScenarioManager:
         # Task class used to save data
         self.save_output_task_id = None
 
+        # General save output policy
+        self.save_all_outputs = None
+
     def read_scenario(self):
         id_tasks = set()
         with open(self.scenario_file_path, "r") as scenario_definition_file:
@@ -48,9 +52,9 @@ class ScenarioManager:
             try:
                 # If the user defines this constant it is applied to all the scheduler of the scenario
                 # However if the attribute save_output is defined in a task it overrides save_all_outputs for this task
-                save_all_outputs = json_scenario_definition[ScenarioManager.SAVE_ALL_OUTPUTS]
+                self.save_all_outputs = json_scenario_definition[ScenarioManager.SAVE_ALL_OUTPUTS]
             except KeyError:
-                save_all_outputs = False
+                self.save_all_outputs = False
 
             try:
                 context_id = json_scenario_definition[ScenarioManager.CONTEXT]["id"]
@@ -70,7 +74,7 @@ class ScenarioManager:
                 # We declare the task sequence which will contains the task and the scheduler that must be run before
                 # TODO: if scheduler of the first level have the same frequency, group them together
                 # For the moment we create 1 task sequence by task declared at the first level
-                tasks_ids = self.task_to_sequence(task, id_tasks, save_all_outputs)
+                tasks_ids = self.task_to_sequence(task, id_tasks)
                 if not self.is_task_definition(task):
                     # We create the task sequence associated, the frequency is the one of the higher level task
                     id_to_task_definition_seq = dict()
@@ -84,7 +88,7 @@ class ScenarioManager:
                         TaskSequence(tasks_ids, task[ScenarioManager.FREQUENCY], context_id, id_to_task_definition_seq,
                                      self.tasks_classes_module))
 
-    def task_to_sequence(self, json_def, id_tasks, save_all_outputs):
+    def task_to_sequence(self, json_def, id_tasks):
         try:
             # if the task sequence has already been generated previously we return it
             # return self.id_to_task_sequence[json_def[ScenarioManager.TASK_ID]]
@@ -93,7 +97,7 @@ class ScenarioManager:
             pass
 
         # we add the current task to id_to_task dict
-        self.add_task(json_def, save_all_outputs)
+        self.add_task(json_def)
 
         # we create the task sequence that will contain the set of scheduler (ie the current task
         # + all the scheduler to run before
@@ -107,7 +111,7 @@ class ScenarioManager:
                 # scheduler may be json task objects or id that references a task
                 if type(task_with) is dict:
                     self.id_to_task_sequence[task_with[ScenarioManager.TASK_ID]] = self.task_to_sequence(task_with,
-                                                                                                           id_tasks, save_all_outputs)
+                                                                                                           id_tasks)
                     task_sequence = task_sequence.union(self.id_to_task_sequence[task_with[ScenarioManager.TASK_ID]])
                 else:
                     # since it is an id, the task having this id must have been declared before
@@ -116,7 +120,7 @@ class ScenarioManager:
 
                     # we load the json associated
                     task_def_json = self.id_to_task_definition[task_with]
-                    self.id_to_task_sequence[task_with] = self.task_to_sequence(task_def_json, id_tasks, save_all_outputs)
+                    self.id_to_task_sequence[task_with] = self.task_to_sequence(task_def_json, id_tasks)
                     task_sequence = task_sequence.union(self.id_to_task_sequence[task_with])
         except KeyError:
             pass
@@ -124,11 +128,11 @@ class ScenarioManager:
         self.id_to_task_sequence[json_def[ScenarioManager.TASK_ID]] = task_sequence
         return task_sequence
 
-    def add_task(self, json_def, save_all_outputs):
+    def add_task(self, json_def):
         try:
             json_def[Task.SAVE_OUTPUT]
         except KeyError:
-            json_def[Task.SAVE_OUTPUT] = save_all_outputs
+            json_def[Task.SAVE_OUTPUT] = self.save_all_outputs
 
         self.id_to_task_definition[json_def[ScenarioManager.TASK_ID]] = json_def
 
@@ -147,6 +151,9 @@ class ScenarioManager:
         return [sequence for sequence in self.task_sequences_to_run if sequence.must_trigger()]
 
     def instanciate_save_task(self):
+        if self.save_output_task_id is None and self.task_must_be_saved():
+            raise ValueError("A save task is required to save outputs")
+
         if self.save_output_task_id is not None:
             save_output_class_name = self.id_to_task_definition[self.save_output_task_id][TaskSequence.TASK_CLASS]
 
@@ -156,19 +163,44 @@ class ScenarioManager:
         else:
             return None
 
-    def run_scenario(self):
-        save_output_instance = self.instanciate_save_task()
+    """
+        Returns true if at least one task must be saved, else false
+    """
+    def task_must_be_saved(self):
+        if self.save_all_outputs:
+            return True
 
+        for task_def in self.id_to_task_definition:
+            try:
+                if task_def[Task.SAVE_OUTPUT]:
+                    return True
+            except:
+                pass
+
+        return False
+
+    """
+        Runs a given scenarion for duration seconds
+        If duration parameter is None, then it runs indefinitely
+    """
+    def run_scenario(self, duration = None):
+        save_output_instance = self.instanciate_save_task()
+        start_time = time.time()
         try:
-            while True:
+            while time.time() - start_time < duration:
                 sequences_to_trigger = self.get_tasks_to_trigger()
                 for sequence in sequences_to_trigger:
-                    # TODO: maybe cases where there would be nothing to save in the sequence
+                    # Before launching a sequence we check if the duration has exceeded the limit
+                    if time.time() - start_time > duration:
+                        break
+
                     data = sequence.execute()
                     if save_output_instance is not None:
                         save_output_instance.save(data)
                     logging.info("Ran sequence: {sequence}".format(sequence=str(sequence)))
+
                 time.sleep(self.scheduler_frequency)
         finally:
             if save_output_instance is not None:
                 save_output_instance.close()
+

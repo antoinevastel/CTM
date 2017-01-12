@@ -5,7 +5,7 @@ from scheduler import ScenarioManager
 from scheduler import TaskSequence
 
 path = os.path.dirname(__file__)
-print(path)
+
 
 class MyTestCase(unittest.TestCase):
     """
@@ -71,7 +71,6 @@ class MyTestCase(unittest.TestCase):
                     assert(False)
                 assert(True)
 
-    # todo verifier les bonnes frequences des tasks sequences
     """
         Assert that the frequency of a tasks sequence corresponds to the frequency of
         the higher level task as defined in the scenario file
@@ -91,12 +90,23 @@ class MyTestCase(unittest.TestCase):
             list_tasks_id.sort()
             self.assertEqual(tasks_sequence.frequency, sequence_to_frequency[tuple(list_tasks_id)])
 
+    """
+        Test if save task is correctly assigned
+    """
     def test_save_task(self):
         scenario_manager = ScenarioManager("tests", path + "/scenario_test1.json")
         scenario_manager.read_scenario()
         self.assertEqual(scenario_manager.save_output_task_id, "testSaveTask")
 
     # todo test when save output = true but no save task is assigned
+    """
+        Test that program doesn't crash when
+    """
+    def test_save_task_missing(self):
+        scenario_manager = ScenarioManager("tests", path + "/scenario_test3.json")
+        scenario_manager.read_scenario()
+        with self.assertRaises(ValueError):
+            scenario_manager.run_scenario()
 
 if __name__ == '__main__':
     unittest.main()
