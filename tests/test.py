@@ -1,5 +1,6 @@
 import unittest
 import os
+import time
 
 from scheduler import ScenarioManager
 from scheduler import TaskSequence
@@ -98,15 +99,26 @@ class MyTestCase(unittest.TestCase):
         scenario_manager.read_scenario()
         self.assertEqual(scenario_manager.save_output_task_id, "testSaveTask")
 
-    # todo test when save output = true but no save task is assigned
     """
-        Test that program doesn't crash when
+        Test that program generate an exception when a user wants to save at least one task output
+        But that no save task has been defined in scenario file
     """
     def test_save_task_missing(self):
         scenario_manager = ScenarioManager("tests", path + "/scenario_test3.json")
         scenario_manager.read_scenario()
         with self.assertRaises(ValueError):
-            scenario_manager.run_scenario()
+            scenario_manager.run_scenario(duration=2)
+
+    def test_duration_scenario(self):
+        scenario_manager = ScenarioManager("tests", path + "/scenario_test1.json")
+        scenario_manager.read_scenario()
+        start_time = time.time()
+        duration_test = 2
+        scenario_manager.run_scenario(duration=duration_test)
+        duration_execution = time.time() - start_time
+        print("\n")
+        print(duration_execution)
+        self.assertAlmostEqual(duration_test, duration_execution, delta=2)
 
 if __name__ == '__main__':
     unittest.main()

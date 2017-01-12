@@ -17,7 +17,7 @@ class ScenarioManager:
     SAVE_TASK = "save_task"
     TASKS_CLASSES_DIR = "tasks_classes_dir"
 
-    SCHEDULER_DEFAULT_FREQUENCY = 5
+    SCHEDULER_DEFAULT_FREQUENCY = 1
     SCHEDULER_INF_DURATION = 9999
 
     def __init__(self, tasks_classes_module, scenario_file_path):
@@ -180,7 +180,7 @@ class ScenarioManager:
         return False
 
     """
-        Runs a given scenarion for duration seconds
+        Runs a given scenario for duration seconds
         If duration parameter is None, then it runs indefinitely
     """
     def run_scenario(self, duration = None):
