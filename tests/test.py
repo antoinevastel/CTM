@@ -116,8 +116,6 @@ class MyTestCase(unittest.TestCase):
         duration_test = 2
         scenario_manager.run_scenario(duration=duration_test)
         duration_execution = time.time() - start_time
-        print("\n")
-        print(duration_execution)
         self.assertAlmostEqual(duration_test, duration_execution, delta=2)
 
 if __name__ == '__main__':
