@@ -1,4 +1,4 @@
-from scheduler.task import Task
+from ctm.task import Task
 
 
 class TestTask(Task):

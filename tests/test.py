@@ -2,8 +2,8 @@ import unittest
 import os
 import time
 
-from scheduler import ScenarioManager
-from scheduler import TaskSequence
+from ctm import ScenarioManager
+from ctm import TaskSequence
 
 path = os.path.dirname(__file__)
 
@@ -67,10 +67,10 @@ class MyTestCase(unittest.TestCase):
                 must_instance_be_save = task_instance.must_be_saved()
 
                 if must_instance_be_save and tasks_not_to_save.__contains__(task_id):
-                    assert(False)
+                    assert False
                 elif not must_instance_be_save and not tasks_not_to_save.__contains__(task_id):
-                    assert(False)
-                assert(True)
+                    assert False
+                assert True
 
     """
         Assert that the frequency of a tasks sequence corresponds to the frequency of
