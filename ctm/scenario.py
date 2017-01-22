@@ -2,8 +2,8 @@ import json
 import time
 import logging
 
-from scheduler.taskSequence import TaskSequence
-from scheduler.task import Task
+from ctm.taskSequence import TaskSequence
+from ctm.task import Task
 
 
 """
@@ -67,7 +67,7 @@ class ScenarioManager:
             tasks_to_run = json_scenario_definition[ScenarioManager.TASKS_TO_RUN]
 
             try:
-                # If the user defines this constant it is applied to all the scheduler of the scenario
+                # If the user defines this constant it is applied to all the ctm of the scenario
                 # However if the attribute save_output is defined in a task it overrides save_all_outputs for this task
                 self.save_all_outputs = json_scenario_definition[ScenarioManager.SAVE_ALL_OUTPUTS]
             except KeyError:
@@ -89,7 +89,7 @@ class ScenarioManager:
             for task in tasks_to_run:
                 id_tasks.add(task[ScenarioManager.TASK_ID])
 
-                # We declare the task sequence which will contains the task and the scheduler that must be run before
+                # We declare the task sequence which will contains the task and the ctm that must be run before
                 # TODO: if tasks of the first level have the same frequency, group them together
                 # For the moment we create 1 task sequence by task declared at the first level
                 tasks_ids = self.task_to_sequence(task, id_tasks)
@@ -117,16 +117,16 @@ class ScenarioManager:
         # we add the current task to id_to_task dict
         self.add_task(json_def)
 
-        # We create the task sequence that will contain the set of scheduler (ie the current task
+        # We create the task sequence that will contain the set of ctm (ie the current task
         # + all the tasks to run with
         # The frequency associated with the task sequence if the one of the higher level task
 
         task_sequence = {json_def[ScenarioManager.TASK_ID]}
         try:
-            # scheduler to run before may be an id or a json object
+            # ctm to run before may be an id or a json object
             tasks_to_run_with = json_def[ScenarioManager.RUN_WITH]
             for task_with in tasks_to_run_with:
-                # scheduler may be json task objects or id that references a task
+                # ctm may be json task objects or id that references a task
                 if type(task_with) is dict:
                     self.id_to_task_sequence[task_with[ScenarioManager.TASK_ID]] = self.task_to_sequence(task_with,
                                                                                                          id_tasks)
@@ -210,6 +210,7 @@ class ScenarioManager:
             while not stop_scenario(start_time, duration):
                 sequences_to_trigger = self.get_tasks_to_trigger()
                 for sequence in sequences_to_trigger:
+                    print(sequence)
                     # Before launching a sequence we check if the duration has exceeded the limit
                     if stop_scenario(start_time, duration):
                         break
