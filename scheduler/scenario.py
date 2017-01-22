@@ -6,6 +6,23 @@ from scheduler.taskSequence import TaskSequence
 from scheduler.task import Task
 
 
+"""
+    Given a start_time timestamp and duration parameter in second
+    Returns if the scenario must stop
+    If duration is None then it runs indefinitely
+"""
+
+
+def stop_scenario(start_time, duration=None):
+    if duration is None:
+        return False
+
+    if time.time() - start_time > duration:
+        return True
+
+    return False
+
+
 class ScenarioManager:
     TASK_ID = "id"
     TASKS_TO_RUN = "tasks_to_run"
@@ -64,7 +81,8 @@ class ScenarioManager:
 
             try:
                 self.save_output_task_id = json_scenario_definition[ScenarioManager.SAVE_TASK][ScenarioManager.TASK_ID]
-                self.id_to_task_definition[self.save_output_task_id] = json_scenario_definition[ScenarioManager.SAVE_TASK]
+                self.id_to_task_definition[self.save_output_task_id] = json_scenario_definition[
+                    ScenarioManager.SAVE_TASK]
             except:
                 pass
 
@@ -72,7 +90,7 @@ class ScenarioManager:
                 id_tasks.add(task[ScenarioManager.TASK_ID])
 
                 # We declare the task sequence which will contains the task and the scheduler that must be run before
-                # TODO: if scheduler of the first level have the same frequency, group them together
+                # TODO: if tasks of the first level have the same frequency, group them together
                 # For the moment we create 1 task sequence by task declared at the first level
                 tasks_ids = self.task_to_sequence(task, id_tasks)
                 if not self.is_task_definition(task):
@@ -99,9 +117,9 @@ class ScenarioManager:
         # we add the current task to id_to_task dict
         self.add_task(json_def)
 
-        # we create the task sequence that will contain the set of scheduler (ie the current task
-        # + all the scheduler to run before
-        # the frequency associated with the task sequence if the one of the higher level task
+        # We create the task sequence that will contain the set of scheduler (ie the current task
+        # + all the tasks to run with
+        # The frequency associated with the task sequence if the one of the higher level task
 
         task_sequence = {json_def[ScenarioManager.TASK_ID]}
         try:
@@ -111,7 +129,7 @@ class ScenarioManager:
                 # scheduler may be json task objects or id that references a task
                 if type(task_with) is dict:
                     self.id_to_task_sequence[task_with[ScenarioManager.TASK_ID]] = self.task_to_sequence(task_with,
-                                                                                                           id_tasks)
+                                                                                                         id_tasks)
                     task_sequence = task_sequence.union(self.id_to_task_sequence[task_with[ScenarioManager.TASK_ID]])
                 else:
                     # since it is an id, the task having this id must have been declared before
@@ -139,6 +157,7 @@ class ScenarioManager:
     """
         If a task has no frequency we consider it is only a definition of the task
     """
+
     @staticmethod
     def is_task_definition(json_def):
         try:
@@ -150,7 +169,7 @@ class ScenarioManager:
     def get_tasks_to_trigger(self):
         return [sequence for sequence in self.task_sequences_to_run if sequence.must_trigger()]
 
-    def instanciate_save_task(self):
+    def instantiate_save_task(self):
         if self.save_output_task_id is None and self.task_must_be_saved():
             raise ValueError("A save task is required to save outputs")
 
@@ -166,6 +185,7 @@ class ScenarioManager:
     """
         Returns true if at least one task must be saved, else false
     """
+
     def task_must_be_saved(self):
         if self.save_all_outputs:
             return True
@@ -174,7 +194,7 @@ class ScenarioManager:
             try:
                 if task_def[Task.SAVE_OUTPUT]:
                     return True
-            except:
+            except KeyError:
                 pass
 
         return False
@@ -183,15 +203,15 @@ class ScenarioManager:
         Runs a given scenario for duration seconds
         If duration parameter is None, then it runs indefinitely
     """
-    def run_scenario(self, duration = None):
-        save_output_instance = self.instanciate_save_task()
+    def run_scenario(self, duration=None):
+        save_output_instance = self.instantiate_save_task()
         start_time = time.time()
         try:
-            while time.time() - start_time < duration:
+            while not stop_scenario(start_time, duration):
                 sequences_to_trigger = self.get_tasks_to_trigger()
                 for sequence in sequences_to_trigger:
                     # Before launching a sequence we check if the duration has exceeded the limit
-                    if time.time() - start_time > duration:
+                    if stop_scenario(start_time, duration):
                         break
 
                     data = sequence.execute()
