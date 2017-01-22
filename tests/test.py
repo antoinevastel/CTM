@@ -8,7 +8,7 @@ from ctm import TaskSequence
 path = os.path.dirname(__file__)
 
 
-class MyTestCase(unittest.TestCase):
+class TestScenarioManager(unittest.TestCase):
     """
         Test if the task sequences generated are correct
     """
